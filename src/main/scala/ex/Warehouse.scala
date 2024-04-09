@@ -1,5 +1,6 @@
 package ex
 
+import ex.Item.unapply
 import util.Optionals.Optional
 import util.Sequences.Sequence
 trait Item:
@@ -9,6 +10,8 @@ trait Item:
 
 object Item:
   def apply(code: Int, name: String, tags: String*): Item = ItemImpl(code, name, tags)
+
+  def unapply(item: Item): Option[(Int, String, Seq[String])] = Some(item.code, item.name, item.tags)
 
   private case class ItemImpl(override val code: Int, override val name: String, override val tags: Seq[String]) extends Item:
     override def toString: String = name
@@ -45,10 +48,19 @@ trait Warehouse:
    * @return true if the warehouse contains an item with the given code, false otherwise
    */
   def contains(itemCode: Int): Boolean
+
 end Warehouse
 
 object Warehouse:
   def apply(): Warehouse = WarehouseImpl(Sequence.empty)
+
+//  def someTag(seq: Sequence[Item]): Option[String] =
+//
+//    def _takeTag(): String = seq match
+//      case Sequence.Cons(item, t) => item match
+//        case Item(_, _, value) =>
+//          for tag <- value do 
+//            if searchItems()
 
   private case class WarehouseImpl(private var items: Sequence[Item]) extends Warehouse:
     /**
@@ -94,6 +106,9 @@ object Warehouse:
     override def contains(itemCode: Int): Boolean = items.filter(v => v.code == itemCode) != Sequence.empty
 
     override def toString: String = items.toString
+
+    extension(seq: Sequence[Item])
+      def sameTags(): Option[Sequence[String]] = ???
 
 
 @main def mainWarehouse(): Unit =
