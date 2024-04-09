@@ -5,13 +5,13 @@ import util.Sequences.Sequence
 trait Item:
   def code: Int
   def name: String
-  def tags: Sequence[String]
+  def tags: Seq[String]
 
 object Item:
-  def apply(code: Int, name: String, tags: Sequence[String] = Sequence.empty): Item = ItemImpl(code, name, tags)
+  def apply(code: Int, name: String, tags: String*): Item = ItemImpl(code, name, tags)
 
-  private case class ItemImpl(override val code: Int, override val name: String, override val tags: Sequence[String]) extends Item
-
+  private case class ItemImpl(override val code: Int, override val name: String, override val tags: Seq[String]) extends Item:
+    override def toString: String = name
 
 /**
  * A warehouse is a place where items are stored.
@@ -93,13 +93,15 @@ object Warehouse:
      */
     override def contains(itemCode: Int): Boolean = items.filter(v => v.code == itemCode) != Sequence.empty
 
+    override def toString: String = items.toString
+
 
 @main def mainWarehouse(): Unit =
   val warehouse = Warehouse()
 
-  val dellXps = Item(33, "Dell XPS 15", Sequence("notebook"))
-  val dellInspiron = Item(34, "Dell Inspiron 13", Sequence("notebook"))
-  val xiaomiMoped = Item(35, "Xiaomi S1", Sequence("moped", "mobility"))
+  val dellXps = Item(33, "Dell XPS 15", "notebook")
+  val dellInspiron = Item(34, "Dell Inspiron 13", "notebook")
+  val xiaomiMoped = Item(35, "Xiaomi S1", "moped", "mobility")
 
   println(warehouse.contains(dellXps.code)) // false
   warehouse.store(dellXps) // side effect, add dell xps to the warehouse
