@@ -6,14 +6,17 @@ import util.Sequences.Sequence
 trait Item:
   def code: Int
   def name: String
-  def tags: Seq[String]
+  def tags: Sequence[String]
 
 object Item:
-  def apply(code: Int, name: String, tags: String*): Item = ItemImpl(code, name, tags)
+  def apply(code: Int, name: String, tags: String*): Item =
+    var t: Sequence[String] = Sequence.Nil()
+    for tag <- tags do t = t.add(tag)
+    ItemImpl(code, name, t)
 
-  def unapply(item: Item): Option[(Int, String, Seq[String])] = Some(item.code, item.name, item.tags)
+  def unapply(item: Item): Option[(Int, String, Sequence[String])] = Some(item.code, item.name, item.tags)
 
-  private case class ItemImpl(override val code: Int, override val name: String, override val tags: Seq[String]) extends Item:
+  private case class ItemImpl(override val code: Int, override val name: String, override val tags: Sequence[String]) extends Item:
     override def toString: String = name
 
 /**
@@ -51,18 +54,24 @@ trait Warehouse:
 
 end Warehouse
 
+object SameTag:
+  def unapply(seq: Sequence[Item]): Option[Sequence[String]] =
+
+    @scala.annotation.tailrec
+    def _unapply(acc: Sequence[String], tail: Sequence[Item]): Option[Sequence[String]] = tail match
+      case Sequence.Cons(h1, t) => h1.tags.intersection(acc) match
+        case Sequence.Nil() => Option.empty
+        case a => _unapply(a, t)
+      case _ => Some(acc)
+
+    seq match
+      case Sequence.Cons(h1, t) => _unapply(h1.tags, t)
+      case _ => Option.empty
+
 object Warehouse:
   def apply(): Warehouse = WarehouseImpl(Sequence.empty)
 
-//  def someTag(seq: Sequence[Item]): Option[String] =
-//
-//    def _takeTag(): String = seq match
-//      case Sequence.Cons(item, t) => item match
-//        case Item(_, _, value) =>
-//          for tag <- value do 
-//            if searchItems()
-
-  private case class WarehouseImpl(private var items: Sequence[Item]) extends Warehouse:
+  private case class WarehouseImpl(var items: Sequence[Item]) extends Warehouse:
     /**
      * Stores an item in the warehouse.
      *
@@ -107,16 +116,15 @@ object Warehouse:
 
     override def toString: String = items.toString
 
-    extension(seq: Sequence[Item])
-      def sameTags(): Option[Sequence[String]] = ???
-
 
 @main def mainWarehouse(): Unit =
+  import SameTag.*
+
   val warehouse = Warehouse()
 
   val dellXps = Item(33, "Dell XPS 15", "notebook")
   val dellInspiron = Item(34, "Dell Inspiron 13", "notebook")
-  val xiaomiMoped = Item(35, "Xiaomi S1", "moped", "mobility")
+  val xiaomiMoped = Item(35, "Xiaomi S1", "notebook")
 
   println(warehouse.contains(dellXps.code)) // false
   warehouse.store(dellXps) // side effect, add dell xps to the warehouse
@@ -129,6 +137,12 @@ object Warehouse:
   println(warehouse.retrieve(dellXps.code)) // Just(dellXps)
   warehouse.remove(dellXps) // side effect, remove dell xps from the warehouse
   println(warehouse.retrieve(dellXps.code)) // None
+
+  val items: Sequence[Item] = Sequence.Nil().add(dellXps).add(dellInspiron).add(xiaomiMoped)
+
+  items match
+    case SameTag(t) => println(s"$items have same tag $t")
+    case _ => println(s"$items have different tags")
 
 /** Hints:
  * - Implement the Item with a simple case class

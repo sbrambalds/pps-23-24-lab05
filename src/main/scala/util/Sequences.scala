@@ -9,8 +9,8 @@ object Sequences: // Essentially, generic linkedlists
     case Nil()
 
     override def toString: String = this match
-      case Cons(h, t) => s"$h :: $t"
-      case Nil() => "nil"
+      case Cons(h, t) => if t != Sequence.Nil() then s"$h, $t" else s"$h"
+      case Nil() => ""
 
   object Sequence:
     def apply[A](elements: A*): Sequence[A] =
@@ -22,7 +22,21 @@ object Sequences: // Essentially, generic linkedlists
 
     def empty[A]: Sequence[A] = Nil()
 
+    extension (sequence: Sequence[String])
+
+      def intersection(seq1: Sequence[String]): Sequence[String] =
+
+        @scala.annotation.tailrec
+        def _intersection(acc: Sequence[String], t: Sequence[String]): Sequence[String] = t match
+          case Cons(h, t) => sequence.find(v => v == h) match
+            case Just(a) => _intersection(acc.add(a), t)
+            case _ => _intersection(acc, t)
+          case _ => acc
+
+        _intersection(Nil(), seq1)
+
     extension [A](sequence: Sequence[A])
+
       def head: Optional[A] = sequence match
         case Cons(h, _) => Just(h)
         case _ => Empty()
